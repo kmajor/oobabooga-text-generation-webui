@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.8.0-devel-ubuntu22.04 as builder
+FROM nvidia/cuda:12.1.1-devel-ubuntu22.04 as builder
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked,rw apt-get update && \
     apt-get install --no-install-recommends -y git vim build-essential python3-dev python3-venv && \
@@ -12,7 +12,7 @@ RUN --mount=type=cache,target=/root/.cache/pip,rw \
     python3 -m venv /build/venv && \
     . /build/venv/bin/activate && \
     pip3 install --upgrade pip setuptools wheel ninja && \
-    pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118 && \
+    pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121 && \
     pip3 install -r requirements.txt
 
 # https://developer.nvidia.com/cuda-gpus
@@ -21,7 +21,7 @@ ARG TORCH_CUDA_ARCH_LIST="${TORCH_CUDA_ARCH_LIST:-3.5;5.0;6.0;6.1;7.0;7.5;8.0;8.
 RUN . /build/venv/bin/activate && \
     python3 setup_cuda.py bdist_wheel -d .
 
-FROM nvidia/cuda:11.8.0-runtime-ubuntu22.04
+FROM nvidia/cuda:12.1.1-runtime-ubuntu22.04
 
 LABEL maintainer="Your Name <your.email@example.com>"
 LABEL description="Docker image for GPTQ-for-LLaMa and Text Generation WebUI"
@@ -44,7 +44,7 @@ RUN virtualenv /app/venv
 RUN --mount=type=cache,target=/root/.cache/pip,rw \
     . /app/venv/bin/activate && \
     pip3 install --upgrade pip setuptools wheel ninja && \
-    pip3 install torch --index-url https://download.pytorch.org/whl/cu118 && \
+    pip3 install torch --index-url https://download.pytorch.org/whl/cu121 && \
     pip3 install torchvision torchaudio sentence_transformers xformers
 
 # Copy and install GPTQ-for-LLaMa
@@ -71,7 +71,7 @@ RUN --mount=type=cache,target=/root/.cache/pip,rw \
     pip3 install -r requirements.txt; \
     done
 
-ENV CLI_ARGS=""
+ENV CLI_ARGS="--cpu true"
 
 EXPOSE ${CONTAINER_PORT:-7860} ${CONTAINER_API_PORT:-5000} ${CONTAINER_API_STREAM_PORT:-5005}
 CMD . /app/venv/bin/activate && python3 server.py ${CLI_ARGS}

@@ -184,6 +184,7 @@ def get_stopping_strings(state):
 
 
 def chatbot_wrapper(text, state, regenerate=False, _continue=False, loading_message=True):
+
     history = state['history']
     output = copy.deepcopy(history)
     output = apply_extensions('history', output)
@@ -232,6 +233,8 @@ def chatbot_wrapper(text, state, regenerate=False, _continue=False, loading_mess
     if prompt is None:
         prompt = generate_chat_prompt(text, state, **kwargs)
 
+    tokenCount = apply_extensions('custom_tokenized_length', prompt)
+
     # Generate
     reply = None
     for j, reply in enumerate(generate_reply(prompt, state, stopping_strings=stopping_strings, is_chat=True)):
@@ -263,6 +266,7 @@ def chatbot_wrapper(text, state, regenerate=False, _continue=False, loading_mess
                 yield output
 
     output['visible'][-1][1] = apply_extensions('output', output['visible'][-1][1], state, is_chat=True)
+    output['total_tokens'] = tokenCount
     yield output
 
 
